@@ -3,7 +3,7 @@ pragma solidity ^0.4.25;
 import "./ownable.sol";
 import "./safemath.sol";
 
-contract ZombieFactory is Ownable { //起点合约
+contract ZombieFactory is Ownable { //起点合约; //Ownable合约为合约所有者协议
 
   using SafeMath for uint256;
   using SafeMath32 for uint32;
@@ -20,7 +20,7 @@ contract ZombieFactory is Ownable { //起点合约
     string name;
     uint dna;
     uint32 level;
-    uint32 readyTime;
+    uint32 readyTime; //冷却时间
     uint16 winCount;
     uint16 lossCount;
   }
@@ -31,9 +31,10 @@ contract ZombieFactory is Ownable { //起点合约
   mapping (address => uint) ownerZombieCount; //用owner查有几个僵尸
 
   function _createZombie(string _name, uint _dna) internal { 
-    //一般内部函数前置"_"; //该函数创造僵尸，需输入名字和DNA
+    //一般内部函数前置"_"; //该函数创造僵尸，需输入名字和DNA； //‘internal’，继承自该合约的子合约可以调用
     uint id = zombies.push(Zombie(_name, _dna, 1, uint32(now + cooldownTime), 0, 0)) - 1;
-    //把创造的僵尸推入结构体数组zombies，
+    //把创造的僵尸推入结构体数组zombies
+    //因为now返回类型uint256,所以必须转换成一个uint32（之前定义了结构体重的冷却时间类型为uint32，选择这个是因为存储占用小）
     zombieToOwner[id] = msg.sender; 
     //把新创造的僵尸定义为信息发送者的
     ownerZombieCount[msg.sender] = ownerZombieCount[msg.sender].add(1); 
@@ -45,7 +46,7 @@ contract ZombieFactory is Ownable { //起点合约
   function _generateRandomDna(string _str) private view returns (uint) {
     //该函数生产一个随机DNA，需输入字符串； //view是只读
     uint rand = uint(keccak256(abi.encodePacked(_str)));
-    //用keccak256算法生成伪随机数（16位），转化为uint类型（32位），放在"rand"
+    //用keccak256算法生成伪随机数（16位），转化为uint类型（256），放在"rand"
     return rand % dnaModulus; //取前一行算术结果的余数，保证只有16位
   }
 
@@ -55,6 +56,7 @@ contract ZombieFactory is Ownable { //起点合约
     //需要信息发送者未拥有任何一个僵尸，相当于第一个僵尸是通过发名字生成的
     uint randDna = _generateRandomDna(_name);
     randDna = randDna - randDna % 100;
+    //去掉最后两位，DNA最后两位00
     _createZombie(_name, randDna);
   }
 
