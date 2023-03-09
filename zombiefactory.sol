@@ -8,6 +8,7 @@ contract ZombieFactory is Ownable { //起点合约; //Ownable合约为合约所�
   using SafeMath for uint256;
   using SafeMath32 for uint32;
   using SafeMath16 for uint16;
+  //使用SafeMath都需要声明
 
   event NewZombie(uint zombieId, string name, uint dna);
   //定义事件，设定三个需要返回的值，打log用
@@ -18,11 +19,11 @@ contract ZombieFactory is Ownable { //起点合约; //Ownable合约为合约所�
 
   struct Zombie { //定义结构体，该结构体数据类型为下列
     string name;
-    uint dna;
+    uint dna; //uint默认是uint256,2**256
     uint32 level;
     uint32 readyTime; //冷却时间
     uint16 winCount;
-    uint16 lossCount;
+    uint16 lossCount; //最小是uint8,2**8=256，太少了;所以设置uint16,2**16=65536
   }
 
   Zombie[] public zombies; //新建一个名为zombies的结构体，类型为Zombie
@@ -44,7 +45,9 @@ contract ZombieFactory is Ownable { //起点合约; //Ownable合约为合约所�
   }
 
   function _generateRandomDna(string _str) private view returns (uint) {
-    //该函数生产一个随机DNA，需输入字符串； //view是只读
+    //该函数生产一个随机DNA，需输入字符串
+    //view是只读
+    //private只能被该合约内容调用
     uint rand = uint(keccak256(abi.encodePacked(_str)));
     //用keccak256算法生成伪随机数（16位），转化为uint类型（256），放在"rand"
     return rand % dnaModulus; //取前一行算术结果的余数，保证只有16位
